@@ -35,7 +35,7 @@ Built on [OpenPGP.js](https://openpgpjs.org/) v5, with no build step and no depe
 You need [Node.js](https://nodejs.org/) 14 or newer. There is nothing to install.
 
 ```bash
-git clone https://github.com/<your-username>/kleo-web.git
+git clone https://github.com/s3raphine/kleo-web.git
 cd kleo-web
 npm start
 ```
