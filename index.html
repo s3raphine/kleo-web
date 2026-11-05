@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Kleo Web</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+
+  <header class="titlebar">
+    <div class="brand"><span class="logo" data-icon="shield"></span><span class="brand-name">KLEO</span><span class="brand-tag">WEB</span></div>
+    <span class="title-sep"></span>
+    <span class="subtitle">PGP Key Manager</span>
+  </header>
+
+  <aside class="sidebar">
+    <div class="nav-section">My vaults</div>
+    <button class="nav active" data-view="priv"><span data-icon="key"></span><span>Private Keys</span><span class="count" id="countPriv">0</span></button>
+    <button class="nav" data-view="pub"><span data-icon="users"></span><span>Public Keys</span><span class="count" id="countPub">0</span></button>
+
+    <div class="nav-section">Tools</div>
+    <button class="nav" data-view="encrypt"><span data-icon="lock"></span><span>Encrypt / Sign</span></button>
+    <button class="nav" data-view="decrypt"><span data-icon="unlock"></span><span>Decrypt / Verify</span></button>
+
+    <div class="nav-section">Application</div>
+    <button class="nav" data-view="settings"><span data-icon="sliders"></span><span>Settings</span></button>
+
+    <div class="side-card">
+      <span data-icon="shield"></span>
+      <strong>100% local</strong>
+      <p>Your keys never leave this browser. The page is not allowed to make any network connection.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Key lists -->
+    <section class="view active" data-view="priv pub" id="listView">
+      <div class="toolbar">
+        <button class="btn primary" id="newKeyBtn"><span data-icon="plus"></span>New key</button>
+        <button class="btn" id="importBtn"><span data-icon="upload"></span>Import</button>
+        <div class="search"><span data-icon="search"></span><input id="search" type="search" placeholder="Search keys"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="keys">
+          <thead><tr><th>Name</th><th>Identifier</th><th>Type</th><th>Added</th><th>Status</th></tr></thead>
+          <tbody id="keyRows"></tbody>
+        </table>
+        <div class="empty-list hidden" id="emptyList"></div>
+      </div>
+    </section>
+
+    <!-- Encrypt / Sign -->
+    <section class="view tool" data-view="encrypt">
+      <div class="tool-inner">
+        <h1>Encrypt / Sign</h1>
+        <p class="muted tool-intro">Protect a message or a file for one or more people, and prove it comes from you.</p>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step">1</span><h2>What do you want to protect?</h2>
+            <div class="seg" id="encInputSeg"><button data-val="text" class="active">Text</button><button data-val="file">File</button></div>
+          </div>
+          <div data-enc-input="text">
+            <textarea id="encInput" rows="8" class="prose" placeholder="Write your message here…"></textarea>
+          </div>
+          <div data-enc-input="file" class="hidden">
+            <label class="drop" id="encDrop"><span data-icon="upload"></span><span id="encFileName">Click or drop a file here</span><input id="encFile" type="file"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step">2</span><h2>Action</h2>
+            <div class="seg" id="encActionSeg"><button data-val="encrypt" class="active">Encrypt</button><button data-val="sign">Sign only</button></div>
+          </div>
+          <label class="field">Your key
+            <select id="signer"></select>
+          </label>
+          <label class="check" data-only="encrypt"><input id="doSign" type="checkbox" checked> Sign with my key (recipients can check it comes from you)</label>
+          <label class="check" data-only="encrypt"><input id="encToSelf" type="checkbox" checked> Also encrypt for my key (so I can read it later)</label>
+          <p class="muted small" data-only="sign">Signing without encrypting: anyone can read the content, but they can verify it comes from you and was not changed.</p>
+        </div>
+
+        <div class="card" data-only="encrypt">
+          <div class="card-head"><span class="step">3</span><h2>Recipients</h2></div>
+          <p class="muted small card-sub">Only these people will be able to read it.</p>
+          <div class="recip-tools">
+            <input id="recipFilter" type="search" placeholder="Search your public keys…">
+            <button class="btn sm" id="pasteRecip"><span data-icon="plus"></span>Use someone's public key</button>
+          </div>
+          <div id="recipList" class="recips"></div>
+          <label class="check"><input id="usePassword" type="checkbox"> Also protect with a password</label>
+          <input id="encPassword" type="password" class="indent hidden" placeholder="Password" autocomplete="new-password">
+        </div>
+
+        <div class="card">
+          <div class="card-head"><span class="step" id="outStep">4</span><h2>Output</h2></div>
+          <label class="check" id="armorRow"><input id="armor" type="checkbox" checked> Text format (ASCII armor .asc) — uncheck for a binary .gpg file</label>
+          <label class="check" id="detachedRow"><input id="detached" type="checkbox"> Detached signature (separate signature, text left untouched)</label>
+          <div class="run-row">
+            <button class="btn primary" id="runEncrypt"><span data-icon="lock"></span><span id="runEncryptLabel">Encrypt</span></button>
+            <span class="muted small" id="encSummary"></span>
+          </div>
+        </div>
+
+        <div id="encOutBox" class="card out hidden">
+          <div class="out-head"><h2 id="encOutTitle">Result</h2>
+            <span class="row"><button class="btn sm" id="copyEnc"><span data-icon="copy"></span>Copy</button><button class="btn sm" id="saveEnc"><span data-icon="download"></span>Download</button></span>
+          </div>
+          <textarea id="encOutput" rows="10" readonly spellcheck="false"></textarea>
+          <div id="encFileOut" class="file-result hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Decrypt / Verify -->
+    <section class="view tool" data-view="decrypt">
+      <div class="tool-inner">
+        <h1>Decrypt / Verify</h1>
+        <p class="muted tool-intro">Paste or open an encrypted message, a signed message or a signature. The right private key is picked automatically.</p>
+
+        <div class="card">
+          <div class="card-head">
+            <span class="step">1</span><h2>What did you receive?</h2>
+            <div class="seg" id="decInputSeg"><button data-val="text" class="active">Text</button><button data-val="file">File</button></div>
+          </div>
+          <div data-dec-input="text">
+            <textarea id="decInput" rows="9" spellcheck="false" placeholder="-----BEGIN PGP MESSAGE-----"></textarea>
+            <details id="detachedBox">
+              <summary>Checking a detached signature? Paste the original text here</summary>
+              <textarea id="detachedText" rows="4" placeholder="Original signed text"></textarea>
+            </details>
+          </div>
+          <div data-dec-input="file" class="hidden">
+            <label class="drop" id="decDrop"><span data-icon="upload"></span><span id="decFileName">Encrypted or signed file (.gpg, .asc, .pgp, .sig)</span><input id="decFile" type="file"></label>
+            <p class="drop-label">Only for a detached signature (.sig): the original file</p>
+            <label class="drop" id="decDataDrop"><span data-icon="upload"></span><span id="decDataName">Original file (optional)</span><input id="decDataFile" type="file"></label>
+          </div>
+          <div class="run-row">
+            <button class="btn primary" id="runDecrypt"><span data-icon="unlock"></span>Decrypt / Verify</button>
+          </div>
+        </div>
+
+        <div id="decOutBox" class="card out hidden">
+          <div class="out-head"><h2>Result</h2>
+            <span class="row"><button class="btn sm" id="copyDec"><span data-icon="copy"></span>Copy</button><button class="btn sm" id="saveDec"><span data-icon="download"></span>Download</button></span>
+          </div>
+          <div id="sigResults"></div>
+          <textarea id="decOutput" rows="10" readonly></textarea>
+          <div id="decFileOut" class="file-result hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="view tool" data-view="settings">
+      <div class="tool-inner">
+        <h1>Settings</h1>
+        <div class="setting">
+          <div><strong>Auto-lock</strong><p class="muted small">Locks all private keys again after a period of inactivity.</p></div>
+          <select id="idleSetting">
+            <option value="5">5 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="60">1 hour</option>
+            <option value="0">Never</option>
+          </select>
+        </div>
+        <div class="setting">
+          <div><strong>Lock now</strong><p class="muted small">Clears every unlocked key from memory.</p></div>
+          <button class="btn" id="lockAll"><span data-icon="lock"></span>Lock all</button>
+        </div>
+        <div class="setting">
+          <div><strong>Backup</strong><p class="muted small">Exports all your keys (private keys protected by their passphrase, plus public keys) into a single file.</p></div>
+          <button class="btn" id="backupAll"><span data-icon="download"></span>Export</button>
+        </div>
+        <div class="setting danger-zone">
+          <div><strong>Erase everything</strong><p class="muted small">Deletes every key stored in this browser. Cannot be undone without a backup.</p></div>
+          <button class="btn danger" id="wipeAll"><span data-icon="trash"></span>Erase</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="detail" id="detail"></aside>
+
+  <footer class="statusbar">
+    <span>Kleo Web · OpenPGP.js</span>
+    <span id="lockState"></span>
+  </footer>
+</div>
+
+<!-- Modal dialogs -->
+<dialog id="modal">
+  <div class="modal-body" id="modalBody"></div>
+</dialog>
+
+<div id="toast" class="toast"></div>
+
+<script src="lib/openpgp.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

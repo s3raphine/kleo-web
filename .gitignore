@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+.claude/
+
+# Never commit keys or messages
+*.asc
+*.gpg
+*.pgp
+*.sig
+*.key

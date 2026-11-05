@@ -1,0 +1,14 @@
+{
+  "name": "kleo-web",
+  "version": "1.0.0",
+  "description": "A 100% local, in-browser OpenPGP key manager: manage keys, encrypt, sign, decrypt and verify.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "node serve.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "keywords": ["pgp", "openpgp", "gpg", "encryption", "signature", "privacy"]
+}
